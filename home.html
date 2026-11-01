@@ -3,24 +3,317 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pigeon Planner</title>
+  <title>Pigeon: To-Do Planner - Private, Local-First Task Management</title>
+  <meta name="description" content="Pigeon To-Do Planner is a local-first task manager with smart scheduling, Pomodoro timer, on-device AI, and private Google Drive backup.">
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; max-width: 750px; margin: 60px auto; padding: 0 20px; text-align: center; color: #333; }
-    h1 { font-size: 2.2rem; color: #1a73e8; margin-bottom: 12px; }
-    p.lead { font-size: 1.15rem; color: #555; margin-bottom: 30px; }
-    .links { margin-top: 35px; display: flex; justify-content: center; gap: 20px; }
-    .links a { color: #1a73e8; text-decoration: none; font-weight: 500; }
-    .links a:hover { text-decoration: underline; }
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #eff6ff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --bg: #ffffff;
+      --bg-alt: #f8fafc;
+      --border: #e2e8f0;
+      --card-bg: #ffffff;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.04);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--text-main);
+      background-color: var(--bg);
+      line-height: 1.6;
+    }
+
+    /* Container */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* Header */
+    header {
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+    }
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 70px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--primary);
+      color: white;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    .nav-links { display: flex; gap: 24px; list-style: none; }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--primary); }
+
+    /* Hero */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+      background: radial-gradient(circle at top, var(--primary-light) 0%, transparent 70%);
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      border: 1px solid rgba(37, 99, 235, 0.2);
+    }
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1.2;
+      color: #0f172a;
+      margin-bottom: 20px;
+      letter-spacing: -0.02em;
+    }
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 auto 36px;
+    }
+
+    /* Feature Cards */
+    .section-title {
+      text-align: center;
+      margin: 60px 0 40px;
+    }
+    .section-title h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 10px;
+    }
+    .section-title p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-bottom: 60px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+    }
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+    .card h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #0f172a;
+    }
+    .card p { color: var(--text-muted); font-size: 0.95rem; }
+
+    /* Security & Google Integration Callout */
+    .security-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 16px;
+      padding: 36px;
+      margin: 40px 0 60px;
+    }
+    .security-box h3 {
+      color: #166534;
+      font-size: 1.35rem;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .security-box p {
+      color: #15803d;
+      font-size: 1rem;
+      margin-bottom: 12px;
+    }
+    .security-box ul {
+      margin-left: 20px;
+      color: #166534;
+      font-size: 0.95rem;
+    }
+    .security-box li { margin-bottom: 6px; }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      background: var(--bg-alt);
+      padding: 40px 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .footer-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+    }
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+    .footer-links a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .footer-links a:hover { text-decoration: underline; }
+
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 2.2rem; }
+      .hero p { font-size: 1.05rem; }
+    }
   </style>
 </head>
 <body>
-  <h1>Pigeon Planner</h1>
-  <p class="lead">A smart, intuitive application designed to help you organize and manage your tasks, schedules, and plans efficiently.</p>
 
-  <div class="links">
-    <a href="./">Privacy Policy</a>
-    <span>&bull;</span>
-    <a href="terms.html">Terms of Service</a>
-  </div>
+  <!-- Navigation -->
+  <header>
+    <div class="container nav">
+      <a href="home.html" class="brand">
+        <div class="brand-icon">🕊️</div>
+        <span>Pigeon Planner</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="./">Privacy Policy</a></li>
+        <li><a href="terms.html">Terms of Service</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <span class="badge">Privacy-First &bull; Local-First Task Manager</span>
+      <h1>Master Your Day with Complete Privacy</h1>
+      <p>Pigeon is a powerful to-do planner built for Android. Your tasks, notes, and habits stay safely on your device with optional private Google Drive cloud backups.</p>
+    </div>
+  </section>
+
+  <!-- Core Features -->
+  <main class="container">
+    <div class="section-title">
+      <h2>Designed for Focus and Simplicity</h2>
+      <p>Everything you need to plan ahead, stay organized, and achieve your goals.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-icon">📋</div>
+        <h3>Smart Task Management</h3>
+        <p>Plan with priorities, subtasks, repeating schedules, and time blocks. Use quick natural text input like "Call mom tomorrow 5pm" to auto-schedule tasks.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">⏱️</div>
+        <h3>Focus & Pomodoro Timer</h3>
+        <p>Built-in Pomodoro timer (25 min focus / 5 min break) with offline scheduled notifications and customizable sound and vibration alerts.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <h3>Analytics & Reviews</h3>
+        <p>Track your productivity with visual charts, weekly reviews, and daily summaries. Export clean CSV reports directly to your device anytime.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">🔒</div>
+        <h3>Local-First by Default</h3>
+        <p>Tasks live in your phone's local SQLite database. The app works 100% offline without requiring an account or sending your data to external tracking servers.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">🤖</div>
+        <h3>On-Device AI Assistant</h3>
+        <p>Break complex projects into actionable subtasks and auto-generate daily reviews using on-device AI. Your prompts and data never leave your phone.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">☁️</div>
+        <h3>Private Google Drive Sync</h3>
+        <p>Seamlessly back up and restore your task database to your personal Google Drive AppData folder with single-tap Google Sign-In.</p>
+      </div>
+    </div>
+
+    <!-- Google OAuth / Data Transparency Section -->
+    <div class="security-box">
+      <h3>🛡️ Transparency & Google Account Data Usage</h3>
+      <p>Pigeon: To-Do Planner strictly complies with the <strong>Google API Services User Data Policy</strong>, including the Limited Use requirements:</p>
+      <ul>
+        <li><strong>Google Drive AppData Scope:</strong> Used solely to upload and restore your encrypted backup files to your own Google Drive application folder.</li>
+        <li><strong>No Third-Party Sharing:</strong> We do not sell, rent, or transfer your Google user data to advertisers or data brokers.</li>
+        <li><strong>Local Processing:</strong> All task computations, search indexes, and summaries run locally on your device.</li>
+      </ul>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-content">
+      <p>&copy; 2026 Pigeon Planner. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="home.html">Home</a>
+        <a href="./">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
+
 </body>
 </html>
